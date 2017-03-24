@@ -1,5 +1,6 @@
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
@@ -8,8 +9,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
+import java.lang.reflect.AnnotatedElement;
 public class ClassFinder {
 
 	public Class<?>[] findLocalClasses() {		
@@ -59,32 +61,17 @@ public class ClassFinder {
 	public Method[] findTestMethods(Class<?>[] classes) {
 		ArrayList<Method> methods = new ArrayList<Method>();
 		
+		//check for nested classes
+		ConcurrentLinkedQueue<Class<?>> clazzQueue = new ConcurrentLinkedQueue<Class<?>>();
+		ArrayList<Class<?>> toRead = new ArrayList<Class<?>>();
+		
 		for (Class<?> clazz : classes) {
-			Annotation[] clazzAnnotations = clazz.getDeclaredAnnotations();
-			
-			int i = 0;
-			while (i < clazzAnnotations.length && clazzAnnotations[i].annotationType().equals(SimpleTest.class)) { i++; }
-			
-			if (i < clazzAnnotations.length) {
-				for (Method m : clazz.getDeclaredMethods()) {
-					methods.add(m);
-				}
-			}
-			else {
-				for (Method m : clazz.getDeclaredMethods()) {
-					boolean hasAnnotation = false;
-					System.out.println(m.toGenericString());
-					for (Annotation a : m.getAnnotations()) {
-						if (a.annotationType().equals(SimpleTest.class)) {
-							hasAnnotation = true;
-						}
-					}
-					if (hasAnnotation)
-						methods.add(m);
-				}
-			}
-			
-			
+			clazzQueue.add(clazz);
+		}
+		
+		while(!clazzQueue.isEmpty()) {
+			Class<?> clazz = clazzQueue.poll();
+			// get subclasses
 		}
 		
 		
@@ -96,6 +83,8 @@ public class ClassFinder {
 		return f != null && f.getName().toString().split("\\.")[f.getName().toString().split("\\.").length - 1].equals("class");
 	}
 	
+
+	
 	public static void main(String[] args) {
 		ClassFinder classFinder = new ClassFinder();
 		Class<?>[] classes = classFinder.findLocalClasses();
@@ -103,7 +92,11 @@ public class ClassFinder {
 		System.out.println(methods.length);
 		for (Method m : methods) {
 			System.out.println(m.getName());
-		}
+		}		
 	}
-	
+
+	@SimpleTest
+	public String toString() {
+		return "";
+	}
 }
