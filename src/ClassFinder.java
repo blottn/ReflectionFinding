@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -48,13 +49,28 @@ public class ClassFinder {
 		ArrayList<Class<?>> classes = new ArrayList<Class<?>>();
 		ClassLoader loader = ClassLoader.getSystemClassLoader();
 		
+		Queue<Class<?>> toScan = new LinkedList<Class<?>>();
 		for (String str : classNames) {
 			try {
-				classes.add(loader.loadClass(str));
+				toScan.add(loader.loadClass(str));
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
 		}
+		
+		
+		// get all classes that are subclasses of the already loaded classes.
+		
+		while (!toScan.isEmpty()) {
+			Class<?> current = toScan.poll();
+			classes.add(current);
+			
+			Class<?>[] subs = current.getDeclaredClasses();
+			for (Class<?> c : subs ) {
+				toScan.add(c);
+			}
+		}
+		
 		return classes.toArray(new Class<?>[classes.size()]);
 	}
 	
