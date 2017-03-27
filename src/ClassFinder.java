@@ -3,11 +3,14 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
@@ -19,7 +22,21 @@ public class ClassFinder {
 		
 		URL url = this.getClass().getProtectionDomain().getCodeSource().getLocation();
 		
-		Path path = Paths.get("/workspace", "ClassFinder", "bin");
+		System.out.println(url.toString());
+		String[] uri = url.toString().substring(9).split("/");
+		uri[0] = "/" + uri[0];
+		
+		for (String s : uri) {
+			System.out.println(s);
+		}
+		
+		String pathPrefix = uri[0];
+		String[] pathSuffixes = new String[uri.length - 1];
+		for (int i = 1 ; i < uri.length; i++) {
+			pathSuffixes[i - 1] = uri[i];
+		}
+		
+		Path path = Paths.get(pathPrefix, pathSuffixes);
 		File root = path.toFile();
 		
 		ArrayList<String> classNames = new ArrayList<String>();
@@ -49,28 +66,13 @@ public class ClassFinder {
 		ArrayList<Class<?>> classes = new ArrayList<Class<?>>();
 		ClassLoader loader = ClassLoader.getSystemClassLoader();
 		
-		Queue<Class<?>> toScan = new LinkedList<Class<?>>();
 		for (String str : classNames) {
 			try {
-				toScan.add(loader.loadClass(str));
+				classes.add(loader.loadClass(str));
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
 		}
-		
-		
-		// get all classes that are subclasses of the already loaded classes.
-		
-		while (!toScan.isEmpty()) {
-			Class<?> current = toScan.poll();
-			classes.add(current);
-			
-			Class<?>[] subs = current.getDeclaredClasses();
-			for (Class<?> c : subs ) {
-				toScan.add(c);
-			}
-		}
-		
 		return classes.toArray(new Class<?>[classes.size()]);
 	}
 	
@@ -87,7 +89,6 @@ public class ClassFinder {
 		
 		while(!clazzQueue.isEmpty()) {
 			Class<?> clazz = clazzQueue.poll();
-			// get subclasses
 		}
 		
 		
@@ -99,16 +100,16 @@ public class ClassFinder {
 		return f != null && f.getName().toString().split("\\.")[f.getName().toString().split("\\.").length - 1].equals("class");
 	}
 	
-
-	
 	public static void main(String[] args) {
 		ClassFinder classFinder = new ClassFinder();
 		Class<?>[] classes = classFinder.findLocalClasses();
+		
+		System.out.println(classes.length);
 		Method[] methods = classFinder.findTestMethods(classes);
 		System.out.println(methods.length);
 		for (Method m : methods) {
 			System.out.println(m.getName());
-		}		
+		}
 	}
 
 	@SimpleTest
