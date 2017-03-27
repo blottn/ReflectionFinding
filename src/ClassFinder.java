@@ -73,19 +73,30 @@ public class ClassFinder {
 		return classes.toArray(new Class<?>[classes.size()]);
 	}
 	
-	public Method[] findTestMethods(Class<?>[] classes) {
+	public Method[] findMethods(Class<?>[] classes) {
 		ArrayList<Method> methods = new ArrayList<Method>();
 		
 		for (Class<?> clazz : classes) {
 			Method[] declaredMethods = clazz.getDeclaredMethods();
 			
 			for (Method m : declaredMethods) {
-				System.out.println(clazz.getName() + ": " + m.getName());
+				methods.add(m);
 			}
 		}
-		
-		
 		return methods.toArray(new Method[methods.size()]);
+	}
+	
+	public Method[] findMethodsFor(Class<?> annotation, Class<?>[] classes) {
+		Method[] methods = findMethods(classes);
+		ArrayList<Method> annotated = new ArrayList<Method>();
+		for (Method m : methods) {
+			int i;
+			for (i = 0; i < m.getDeclaredAnnotations().length && !m.getDeclaredAnnotations()[i].annotationType().equals(annotation); i++) {}
+			if (i != m.getDeclaredAnnotations().length) {
+				annotated.add(m);
+			}
+		}
+		return annotated.toArray(new Method[annotated.size()]);
 	}
 	
 	public boolean isClassFile(File f) {
@@ -94,10 +105,7 @@ public class ClassFinder {
 	
 	public static void main(String[] args) {
 		ClassFinder classFinder = new ClassFinder();
-		Class<?>[] classes = classFinder.findLocalClasses();
-		
-		Method[] methods = classFinder.findTestMethods(classes);
-		for (Method m : methods) {
+		for (Method m : classFinder.findMethodsFor(SimpleTest.class, classFinder.findLocalClasses())) {
 			System.out.println(m.getName());
 		}
 	}
