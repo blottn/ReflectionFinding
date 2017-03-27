@@ -22,13 +22,9 @@ public class ClassFinder {
 		
 		URL url = this.getClass().getProtectionDomain().getCodeSource().getLocation();
 		
-		System.out.println(url.toString());
-		String[] uri = url.toString().substring(9).split("/");
+		String[] uri = url.toString().substring(9).split("/");	//strip initial stuff such as protocol declaration
+
 		uri[0] = "/" + uri[0];
-		
-		for (String s : uri) {
-			System.out.println(s);
-		}
 		
 		String pathPrefix = uri[0];
 		String[] pathSuffixes = new String[uri.length - 1];
@@ -40,7 +36,6 @@ public class ClassFinder {
 		File root = path.toFile();
 		
 		ArrayList<String> classNames = new ArrayList<String>();
-		
 		
 		//find all classNames in the current protected domains directory
 		
@@ -62,7 +57,9 @@ public class ClassFinder {
 		
 		//don't need to load ourselves
 		classNames.remove("ClassFinder");
-		
+		if (classNames.contains("SimpleTest")) {
+			classNames.remove("SimpleTest");
+		}
 		ArrayList<Class<?>> classes = new ArrayList<Class<?>>();
 		ClassLoader loader = ClassLoader.getSystemClassLoader();
 		
@@ -79,18 +76,13 @@ public class ClassFinder {
 	public Method[] findTestMethods(Class<?>[] classes) {
 		ArrayList<Method> methods = new ArrayList<Method>();
 		
-		//check for nested classes
-		ConcurrentLinkedQueue<Class<?>> clazzQueue = new ConcurrentLinkedQueue<Class<?>>();
-		ArrayList<Class<?>> toRead = new ArrayList<Class<?>>();
-		
 		for (Class<?> clazz : classes) {
-			clazzQueue.add(clazz);
+			Method[] declaredMethods = clazz.getDeclaredMethods();
+			
+			for (Method m : declaredMethods) {
+				System.out.println(clazz.getName() + ": " + m.getName());
+			}
 		}
-		
-		while(!clazzQueue.isEmpty()) {
-			Class<?> clazz = clazzQueue.poll();
-		}
-		
 		
 		
 		return methods.toArray(new Method[methods.size()]);
@@ -104,9 +96,7 @@ public class ClassFinder {
 		ClassFinder classFinder = new ClassFinder();
 		Class<?>[] classes = classFinder.findLocalClasses();
 		
-		System.out.println(classes.length);
 		Method[] methods = classFinder.findTestMethods(classes);
-		System.out.println(methods.length);
 		for (Method m : methods) {
 			System.out.println(m.getName());
 		}
