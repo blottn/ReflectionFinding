@@ -7,8 +7,9 @@ public class TestClass {
 			
 		}
 		
-		public void method() {
-			
+		public boolean method() {
+			System.out.println("Called the sub class method");
+			return true;
 		}
 	}
 	
@@ -16,8 +17,22 @@ public class TestClass {
 	public TestClass() {}
 	
 	@SimpleTest
-	public void theAnnotatedMethod() {
-		
+	public boolean theAnnotatedMethod() {
+		System.out.println("Called me!");
+		return true;
+	}
+	
+	
+	@SimpleTest
+	public static boolean anotherTest() {
+		System.out.println("The second test was called");
+		return false;
+	}
+	
+	@SimpleTest
+	public boolean somethingElse() {
+		System.out.println("Third one");
+		return true;
 	}
 	
 	public void notAnnotated() {

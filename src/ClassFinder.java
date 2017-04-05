@@ -1,6 +1,7 @@
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URI;
@@ -103,11 +104,44 @@ public class ClassFinder {
 		return f != null && f.getName().toString().split("\\.")[f.getName().toString().split("\\.").length - 1].equals("class");
 	}
 	
+	public boolean runTests(Class<?> annotation) {
+		Method[] methods = findMethodsFor(annotation, findLocalClasses());
+		boolean passed = true;
+		for (int i = 0 ; i < methods.length && passed; i++) {
+			Method m = methods[i];
+			Boolean result;
+			try {
+				result = (Boolean) m.invoke(m.getDeclaringClass().newInstance(), (Object[]) null);
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+					| InstantiationException e) {
+				e.printStackTrace(System.err);
+				result = false;
+			}
+			passed = passed && result.booleanValue();
+		}
+		return passed;
+	}
+	
 	public static void main(String[] args) {
 		ClassFinder classFinder = new ClassFinder();
-		for (Method m : classFinder.findMethodsFor(SimpleTest.class, classFinder.findLocalClasses())) {
-			System.out.println(m.getName());
-		}
+		
+		boolean finished = classFinder.runTests(SimpleTest.class);
+		System.out.println(finished);
+		
+//		Class<?>[] classes = classFinder.findLocalClasses();
+//		
+//		
+//		
+//		for (Method m : classFinder.findMethodsFor(SimpleTest.class, classFinder.findLocalClasses())) {
+//			System.out.println(m.getName());
+//			System.out.println(m.getDeclaringClass().getName());
+//			try {
+//				m.invoke(m.getDeclaringClass().newInstance(), null);
+//			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+//					| InstantiationException e) {
+//				e.printStackTrace();
+//			}
+//		}
 	}
 
 	@SimpleTest
