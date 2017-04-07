@@ -7,6 +7,9 @@ public class TestClass {
 			
 		}
 		
+		
+		//running subclass methods does not work yet
+		//@SimpleTest
 		public boolean method() {
 			System.out.println("Called the sub class method");
 			return true;
